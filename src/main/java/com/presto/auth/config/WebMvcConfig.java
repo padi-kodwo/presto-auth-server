@@ -14,15 +14,28 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.List;
 
 @Configuration
@@ -89,8 +102,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         static class ByteResponseWrapper extends HttpServletResponseWrapper {
 
-            private PrintWriter writer;
-            private ByteOutputStream output;
+            private final PrintWriter writer;
+            private final ByteOutputStream output;
 
             public byte[] getBytes() {
                 writer.flush();
@@ -122,17 +135,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
             public ByteRequestWrapper(HttpServletRequest request) throws IOException {
                 super(request);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
                 InputStream inputStream = request.getInputStream();
 
                 byte[] buffer = new byte[4096];
-                int read = 0;
+                int read;
                 while ((read = inputStream.read(buffer)) != -1) {
-                    baos.write(buffer, 0, read);
+                    byteArrayOutputStream.write(buffer, 0, read);
                 }
 
-                replaceRequestPayload(baos.toByteArray());
+                replaceRequestPayload(byteArrayOutputStream.toByteArray());
             }
 
             @Override
@@ -153,7 +166,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         static class ByteOutputStream extends ServletOutputStream {
 
-            private ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            private final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             @Override
             public void write(int b) {
@@ -177,7 +190,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         static class ByteInputStream extends ServletInputStream {
 
-            private InputStream inputStream;
+            private final InputStream inputStream;
 
             public ByteInputStream(final InputStream inputStream) {
                 this.inputStream = inputStream;
