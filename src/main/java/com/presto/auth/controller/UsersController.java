@@ -14,6 +14,7 @@ import com.presto.auth.util.Utils;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,7 @@ public class UsersController {
 
     private final ModelMapper modelMapper;
 
+    @Autowired
     public UsersController(UserServiceImpl userService, ModelMapper modelMapper) {
         this.userService = userService;
         this.modelMapper = modelMapper;

@@ -29,11 +29,14 @@ import java.util.stream.Collectors;
 public class RolesController {
     private static final Logger logger = LoggerFactory.getLogger(RolesController.class);
 
-    @Autowired
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
+    private final RoleServiceImpl roleService;
 
     @Autowired
-    private RoleServiceImpl roleService;
+    public RolesController(ModelMapper modelMapper, RoleServiceImpl roleService) {
+        this.modelMapper = modelMapper;
+        this.roleService = roleService;
+    }
 
 
     @GetMapping("/all")
