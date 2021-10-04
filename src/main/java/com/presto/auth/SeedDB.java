@@ -31,9 +31,6 @@ public class SeedDB implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         TenantContext.setCurrentTenant("X-Crossfire");
 
-
-
-
         if (userService.userCount() > 0)
             return;
 
