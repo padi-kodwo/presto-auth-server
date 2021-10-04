@@ -10,8 +10,6 @@ import com.presto.auth.entity.Role;
 import com.presto.auth.entity.User;
 import com.presto.auth.enums.UserStatus;
 import com.presto.auth.exception.ServiceException;
-import com.presto.auth.repository.AccountValidationTokenRepository;
-import com.presto.auth.repository.RoleRepository;
 import com.presto.auth.repository.UserRepository;
 import com.presto.auth.service.UserService;
 import com.presto.auth.service.UserStatusManager;
@@ -31,8 +29,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,48 +43,38 @@ public class UserServiceImpl implements UserService, UserDetailsService, UserSta
 
     Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    @PersistenceContext
-    public EntityManager entityManager;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
-    private RoleServiceImpl roleService;
-
-
-    private UserRepository userRepository;
-
-    private AccountValidationTokenRepository validationTokenRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final ModelMapper modelMapper;
+    private final RoleServiceImpl roleService;
+    private final UserRepository userRepository;
 
     @Autowired
     UserServiceImpl(UserRepository userRepository,
-                    RoleRepository roleRepository,
-                    AccountValidationTokenRepository validationTokenRepository) {
+                    PasswordEncoder passwordEncoder,
+                    ModelMapper modelMapper,
+                    RoleServiceImpl roleService) {
 
         this.userRepository = userRepository;
-        this.validationTokenRepository = validationTokenRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.modelMapper = modelMapper;
+        this.roleService = roleService;
     }
 
-    @Override
     @Transactional
+    @Override
     public User getUser(String id) {
         return userRepository.findById(id).orElseThrow(() ->
                 new ServiceException(100, "user not found by Id: " + id ));
     }
 
-    @Override
     @Transactional
+    @Override
     public Page<User> getAllUsers(Specification<User> spec, Pageable pageable) {
         return userRepository.findAll(spec, pageable);
     }
 
-    @Override
     @Transactional
+    @Override
     public List<User> getUserByIds(List<String> userIds) {
         Iterable<User> allById = userRepository.findAllById(userIds);
 
@@ -98,8 +84,8 @@ public class UserServiceImpl implements UserService, UserDetailsService, UserSta
         return foundUsers;
     }
 
-    @Override
     @Transactional
+    @Override
     public User createUser(CreateUserDto createUserDto) {
 
         Optional<User> optionalUser = userRepository.findUserByEmail(createUserDto.getEmail());
@@ -123,8 +109,8 @@ public class UserServiceImpl implements UserService, UserDetailsService, UserSta
         return userRepository.save(user);
     }
 
-    @Override
     @Transactional
+    @Override
     public User signUpUser(SignUpUserDto signUpUserDto) {
 
         if (!StringUtils.equals(signUpUserDto.getPassword(), signUpUserDto.getConfirmPassword()))
@@ -152,8 +138,8 @@ public class UserServiceImpl implements UserService, UserDetailsService, UserSta
         return userRepository.save(user);
     }
 
-    @Override
     @Transactional
+    @Override
     public User updateUser(EditUserDto editUserDto) {
 
         List<Role> userRoles = new ArrayList<>();
@@ -169,20 +155,20 @@ public class UserServiceImpl implements UserService, UserDetailsService, UserSta
         return userRepository.save(user);
     }
 
-    @Override
     @Transactional
+    @Override
     public void deleteUser(String id) {
         userRepository.deleteById(id);
     }
 
-    //todo: remember to encode password
-    @Override
     @Transactional
+    @Override
     public void updateUserPassword(EditPasswordDto editPasswordDto) {
         User user = getUser(editPasswordDto.getId());
         user.setPassword(passwordEncoder.encode(editPasswordDto.getPassword()));
 
     }
+
     @Transactional
     @Override
     public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
@@ -206,12 +192,8 @@ public class UserServiceImpl implements UserService, UserDetailsService, UserSta
     @Transactional
     @Override
     public void blockUser(User user) {
-        user = userRepository.findUserByEmail(user.getEmail())
-                .orElseThrow(()->
-                        new ServiceException(100,
-                                "user not found")
-                );
-
+        user = userRepository.findUserByEmail(user.getEmail()).orElseThrow(()->
+                        new ServiceException(100, "user not found"));
         user.setUserStatus(UserStatus.BLOCKED);
 
         userRepository.save(user);

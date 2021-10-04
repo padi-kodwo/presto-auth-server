@@ -2,7 +2,6 @@ package com.presto.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.presto.auth.enums.UserStatus;
-import com.presto.auth.interfaces.TenantSupport;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -42,16 +41,12 @@ import java.util.Set;
 @Setter
 @Getter
 @ToString
-public class User implements Serializable, TenantSupport {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String id;
-
-    @NotNull
-    @Column(name = "tenant_id")
-    private String tenantId;
 
     @Column(name = "email", unique = true)
     private String email;
