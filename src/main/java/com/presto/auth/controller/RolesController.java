@@ -63,7 +63,6 @@ public class RolesController {
     }
 
     @GetMapping(value = "/{code}")
-    @ResponseBody
     public ApiResponse<RoleDto> getRoleByCode(@PathVariable int code,
                                             HttpServletRequest httpServletRequest) {
 
